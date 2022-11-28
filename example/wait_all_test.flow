@@ -1,0 +1,66 @@
+diagram {
+
+
+
+initialization_code="
+global X
+X = lambda i : 'X'+str(i)
+
+global O
+O=lambda i : 'O'+str(i)
+
+global perm3
+perm3 = lambda a : [[a[0],a[1],a[2]],[a[0],a[2],a[1]],[a[1],a[0],a[2]],[a[2],a[0],a[1]], [a[1],a[2],a[0]],[a[2],a[1],a[0]]]
+
+global Line
+Line = [['1','2','3'],['4','5','6'],['7','8','9'],['1','4','7'],['2','5','8'],['3','6','9'],['1','5','9'],['3','5','7']]
+
+global Lines
+Lines =[]
+for p in Line:
+    Lines.extend(perm3(p))
+
+global All
+All= lambda A:[A(i) for i in range(1,10)]
+
+global AllMove
+AllMove=lambda : All(X) + All(O)
+
+global AllButOne  # but N
+AllButOne = lambda x ,f : {i:list(set([f(j) if j!=i else None for j in x])-{None}) for i in x}
+
+global Xwin
+Xwin = 'player X win'
+
+global Owin
+Owin = 'player O win'
+
+global Tie
+Tie = 'game over in tie'
+
+global Fork
+Fork = [([1,4,2],[7,3]) ,([1,4,5],[7,6]),([1,7,9],[4,8]),([1,7,9],[4,8])]
+
+"
+
+
+
+
+
+    #WinChecker
+
+    st5 -> wa5 -> rq5 -> sy5;
+
+    st5 [type=start, initial="[{'line':line} for line in [['1','2','3']] ]", width=400];
+    wa5 [type=waitall, waitall="{Owin:[O(i) for i in line] , Xwin:[X(i) for i in line] }", at= 'winPlayer']
+    rq5 [type=sync, req="[winPlayer]",block= "AllMove()+[Tie]", width=200]
+    sy5 [type=sync, block="AllMove()+[Tie,Xwin,Owin]"]
+
+
+
+    #x moves
+    st2 -> rqX1  ;
+
+    st2 [type=start, initial="[{'i':i }for i in range(1,4)]", width=400];
+    rqX1[type = sync , req="[X(i)]"]
+}

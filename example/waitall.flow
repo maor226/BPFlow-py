@@ -1,0 +1,145 @@
+blockdiag {
+
+initialization_code="
+global X
+X = lambda i : 'X'+str(i)
+
+global O
+O=lambda i : 'O'+str(i)
+
+global perm3
+perm3 = lambda a : [[a[0],a[1],a[2]],[a[0],a[2],a[1]],[a[1],a[0],a[2]],[a[2],a[0],a[1]], [a[1],a[2],a[0]],[a[2],a[1],a[0]]]
+
+global Line
+Line = [['1','2','3'],['4','5','6'],['7','8','9'],['1','4','7'],['2','5','8'],['3','6','9'],['1','5','9'],['3','5','7']]
+
+global Lines
+Lines =[]
+for p in Line:
+    Lines.extend(perm3(p))
+
+global All
+All= lambda A:[A(i) for i in range(1,10)]
+
+global AllMove
+AllMove=lambda : All(X) + All(O)
+
+global AllButOne  # but N
+AllButOne = lambda x ,f : {i:list(set([f(j) if j!=i else None for j in x])-{None}) for i in x}
+
+global Xwin
+Xwin = 'player X win'
+
+global Owin
+Owin = 'player O win'
+
+global Tie
+Tie = 'game over in tie'
+
+global Fork
+Fork = [([1,4,2],[7,3]) ,([1,4,5],[7,6]),([1,7,9],[4,8]),([1,7,9],[4,8])]
+
+"
+
+  event_selection_mechanism = "priority"
+
+######################################################################################
+
+    #complite O line
+
+    st1 -> wa1 -> rq1;
+
+    st1 [type=start, initial="[{'line':line} for line in Line ]", width=400];
+    wa1 [type=waitall, waitall="AllButOne(line ,O)", at= 'winMove']
+    rq1 [type=sync, req="[O(winMove)]", width=200,priority = 8]
+######################################################################################
+
+    #Block the X player
+
+    st3 -> wa3 -> rq3;
+
+    st3 [type=start, initial="[{'line':line} for line in Line ]", width=400];
+    wa3 [type=waitall, waitall="AllButOne(line ,X)", at= 'toblock']
+    rq3 [type=sync, req="[O(toblock)]", width=200,priority = 7]
+
+######################################################################################
+#fork
+#   st4 -> wa4 -> rq4;
+#   wt4;
+
+#   st4 [type=start, initial="[{'fork' : fork , 'defend' : defend} for (fork,defend) in Fork]", width=400];
+#   wa4 [type=waitall, waitall="AllButOne(fork ,O)", at= 'toFork']
+#   rq4 [type=sync, req="[O(toFork)]", width=200,priority = 6]
+#   wt4 [type=sync, wait="[X(d) for d in defend]", width=200]
+#   group {
+#   wa4;
+#   rq4;
+#   wt4;
+#   }
+
+######################################################################################
+
+    #WinChecker
+
+    st5 -> wa5 -> rq5 -> sy5;
+
+    st5 [type=start, initial="[{'line':line} for line in Line ]", width=400];
+    wa5 [type=waitall, waitall="{Owin:[O(i) for i in line] , Xwin:[X(i) for i in line] }", at= 'winPlayer']
+    rq5 [type=sync, req="[winPlayer]",block= "AllMove()+[Tie]", width=200]
+    sy5 [type=sync, block="AllMove()+[Tie,Xwin,Owin]"]
+######################################################################################
+
+    #must play in torns
+
+    st7 -> sy7_1 -> sy7_2 -> sy7_1;
+
+    st7   [type=start, initial="[{}]", width=400];
+    sy7_1 [type=sync, block="All(O)", wait="All(X)"]
+    sy7_2 [type=sync, block="All(X)", wait="All(O)"]
+######################################################################################
+
+    #one player can chose each place + tie checker
+
+    st8 -> sy8_1 -> sy8_2 -> sy8_3;
+
+    st8   [type=start, initial="[{'i':i} for i in range(1,10)]", width=400];
+    sy8_1 [type=sync, block="[Tie]", wait="[X(i),O(i)]"]
+    sy8_2 [type=sync, block="[X(i),O(i)]",req="[Tie]"]
+    sy8_3 [type=sync, block="AllMove()+[Tie+Xwin+Owin]"]
+
+    #make player O turns
+######################################################################################
+
+        #mid
+    st_t1 ->sync1;
+
+    st_t1 [type=start, initial="[{'place':[5]}]", width=400];
+    sync1 [type=sync, req="[O(i) for i in place]",priority =3]
+######################################################################################
+
+        #corners
+    st_t2 ->sync2 ;
+
+    st_t2 [type=start, initial="[{'place':1},{'place':3},{'place':7},{'place':9}]", width=400];
+    sync2 [type=sync, req="[O(place)]",priority =2]
+######################################################################################
+
+        #edge
+    st_t3 ->sync3;
+
+    st_t3 [type=start, initial="[{'place':8},{'place':4},{'place':6},{'place':2}]", width=400];
+    sync3 [type=sync, req="[O(place)]",priority = 1]
+
+######################################################################################
+
+    #x moves
+    st2 -> rqX1  ;
+
+    st2 [type=start, initial="[{'i':i }for i in range(1,10)]", width=400];
+    rqX1[type = sync , req="[X(i)]"]
+
+######################################################################################
+
+
+
+}

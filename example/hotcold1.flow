@@ -1,0 +1,14 @@
+diagram {
+    st1 -> lp1 -> bs1 -> lp1;
+    st3 -> in1 -> in2 -> in1;
+
+    st1 [type=start,initial = "[{'e':'cold'},{'e':'hot'}]"];
+    lp1 [type=loop, count=3];
+    bs1  [type=sync, req="[e]"];
+
+    st3 [type=start,initial ="[{}]"];
+    in1  [type=sync, wait="['hot']", block="['cold']"];
+    in2  [type=sync, wait="['cold']", block="['hot']"];
+
+
+}

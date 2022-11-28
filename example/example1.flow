@@ -1,0 +1,13 @@
+diagram {
+
+
+    st -> sy1;
+    st -> sy2;
+
+    st [type=start,initial = "[{}]"];
+    sy1 [type=sync, req="['hello']",priority=4];
+    sy2 [type=sync, req="['world']",priority= 8];
+
+
+
+}
