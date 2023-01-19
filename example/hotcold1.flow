@@ -3,12 +3,12 @@ diagram {
     st3 -> in1 -> in2 -> in1;
 
     st1 [type=start,initial = "[{'e':'cold'},{'e':'hot'}]"];
-    lp1 [type=loop, count=3];
-    bs1  [type=sync, req="[e]"];
+    lp1 [type=loop, count=3, height=150,width=150];
+    bs1  [type=sync, req="[e]", height=150,width=150];
 
     st3 [type=start,initial ="[{}]"];
-    in1  [type=sync, wait="['hot']", block="['cold']"];
-    in2  [type=sync, wait="['cold']", block="['hot']"];
+    in1  [type=sync, wait="['hot']", block="['cold']", height=150,width=150];
+    in2  [type=sync, wait="['cold']", block="['hot']", height=150,width=150];
 
 
 }

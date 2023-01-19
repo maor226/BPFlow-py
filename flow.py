@@ -7,7 +7,7 @@ import sys
 import os
 import glob
 from bppy import *
-from listener import Listener
+# from listener import Listener
 
 from NodeLibrary import *
 from SimplePriorityEventSelectionStrategy import SimplePriorityEventSelectionStrategy
@@ -34,6 +34,8 @@ builder.DiagramNode.join_by = []
 builder.DiagramNode.join = None
 builder.DiagramNode.name = ""
 
+builder.DiagramNode.cond = ""
+
 builder.DiagramNode.next = None
 
 builder.DiagramNode.waitall = "[]"
@@ -43,7 +45,7 @@ builder.Diagram.run = None
 builder.Diagram.initialization_code = ""
 builder.Diagram.event_selection_mechanism = 'random'
 
-node_types = (StartType(), SyncType(), LoopType(), WaitAll())
+node_types = (StartType(), SyncType(), LoopType(), WaitAll(),IfType())
 
 
 def traverse_nodes(n):

@@ -1,0 +1,85 @@
+blockdiag {
+initialization_code="
+global N
+N = 4
+
+global ES
+ES = lambda s : lambda e : s in e.name()
+
+global ES_Approaching
+ES_Approaching = ES('Approaching')
+
+global  ES_Raise
+ES_Raise = ES('Raise')
+
+global  ES_Lower
+ES_Lower= ES('Lower')
+
+global  ES_Enter
+ES_Enter = ES('Enter')
+
+global  ES_Leaving
+ES_Leaving = ES('Leaving')
+
+global Approaching
+Approaching = lambda i : 'Approaching('+str(i)+')'
+
+global Raise
+Raise = lambda i : 'Raise('+str(i)+')'
+
+global Enter
+Enter = lambda i : 'Enter('+str(i)+')'
+
+global Leaving
+Leaving= lambda i : 'Leaving('+str(i)+')'
+
+"
+
+######################################################################################
+
+#   R1
+
+    st1 -> snApp1 -> snEnt1 -> snLeav1 -> snApp1;
+
+    st1 [type="start", initial="[{ 'i' : i} for i in range(N)]" ];
+
+    snApp1 [type="sync", req="[Approaching(i)]"];
+
+    snEnt1 [type="sync", req="[Enter(i)]"];
+
+    snLeav1 [type="sync", req="[Leaving(i)]"];
+
+######################################################################################
+
+#   R3
+
+    st3 -> snLower2 -> snRaise3 ->snLower2;
+
+    st3 [type="start", initial="[{}]" ];
+
+    snLower2 [type="sync", wait="[ES_Lower]",block="[ES_Enter]"];
+
+    snRaise3 [type="sync", wait="[ES_Raise]"];
+
+######################################################################################
+
+#    R2 *
+
+        st2 -> wtApp2 -> reqLower2 -> wtLeav2 -> snRaise2 ->  blkEnter2;
+        blkEnter2 -> reqLower2;
+        snRaise2 -- passthru ->  wtApp2 [label=Raise , color = red ,textcolor = red];
+
+        st2 [type="start", initial="[{}]" ];
+
+        wtApp2 [type="sync", wait="[ES_Approaching]"];
+
+        reqLower2 [type="sync", req="[Lower]"];
+
+        wtLeav2 [type="sync", wait="[ES_Leaving]"];
+
+        blkEnter2 [type="sync", block="[ES_Enter]",req="[Raise]"];
+
+        snRaise2 [type="sync", req="[Raise]",wait="[ES_Approaching]"];
+
+        passthru [type="sync", wait="[ES_Approaching]",hidden];
+}
