@@ -37,6 +37,9 @@ class NodeType(metaclass=abc.ABCMeta):
 
         if n.tokens_display == 'full':
             for t in n.tokens:
+                t=deepcopy(t)
+                if "event" in t:
+                    del t["event"]
                 n.label += "\n" + str(t)
                 n.height += 10
         elif n.tokens_display == 'count only':
@@ -49,7 +52,7 @@ class NodeType(metaclass=abc.ABCMeta):
         yield Moves({s: [token] for s in n.next.keys()})  # move to all port
 
     def toBPEvent(self, events, n):
-        return [BEventPriority(event, priority=n.priority) for event in events]
+        return [BEventPriority(event, priority=n.priority) if isinstance(event,str) else EventSet(event) for event in events]
 
 
 ###################################################################################
@@ -117,17 +120,16 @@ class SyncType(NodeType):
             token['BLOCK'] = b
             bsync.add_block(*self.toBPEvent(token['BLOCK'], n))
 
-        yield bsync
+        event = yield bsync
 
         for k in ['BLOCK', 'REQ', 'WAIT']:
             if k in token:
                 del token[k]
 
-        x = super().sync(n, token)
-        bsync = x.send(None)
-        while bsync is not None:
-            event = yield bsync
-            bsync = x.send(event)
+        if event.name in n.next.keys():
+            yield Moves({event.name: [token]})
+        else:
+            yield Moves({"default": [token]})
 
 
 ######################################################################################
@@ -156,6 +158,26 @@ class LoopType(NodeType):
 
         if token["COUNT"] != 0:
             yield Moves({port: [token] for port in set(n.next.keys()) - {'after'}})
+
+######################################################################################
+
+class IfType(NodeType):
+
+    def type_string(self) -> str:
+        return "if"
+
+    def node_manipulator(self, node: DiagramNode) -> None:
+        node.label = 'IF'
+        node.label += "\ncondition:" + node.cond
+        super().node_manipulator(node)
+
+    def sync(self, n: DiagramNode, token):
+        cond = eval(n.cond, globals(), token)
+        if(cond):
+            yield Moves({'then': [token]})
+        else:
+            yield Moves({'else': [token]})
+
 
 
 #######################################################################################
@@ -220,12 +242,9 @@ class WaitAll(NodeType):
             del token["WAITALLNAMES"]
         del token["WAITALL"]
 
-        x = super().sync(n, token)
-        toYield = x.send(None)
-        while toYield is not None:
-            event = yield toYield
+        for to in n.next.keys():
+            yield Moves({to: [token]})
 
-            toYield = x.send(event)
 
 # class breakupon(Group_Type):
 #
