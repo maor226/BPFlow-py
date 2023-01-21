@@ -22,7 +22,7 @@ class GroupType(metaclass=abc.ABCMeta):
 class BreakUpon(GroupType):
     def wrap_sync(self, group_id, node: DiagramNode, diagram):
         wait_for = ["X"]
-        node_sync = node.node_type.sync
+        node_sync = node.node_type.execute
 
         def sync(n: DiagramNode, token):
             x = node_sync(n, token)

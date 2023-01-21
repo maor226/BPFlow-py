@@ -48,7 +48,7 @@ class NodeType(metaclass=abc.ABCMeta):
             raise Exception(
                 "Illegal value for 'tokens_display': " + n.tokens_display)
 
-    def sync(self, n: DiagramNode, token):
+    def execute(self, n: DiagramNode, token):
         yield Moves({s: [token] for s in n.next.keys()})  # move to all port
 
     def toBPEvent(self, events, n):
@@ -73,7 +73,7 @@ class StartType(NodeType):
 
         super().node_manipulator(node)
 
-    def sync(self, n: DiagramNode, token):
+    def execute(self, n: DiagramNode, token):
         yield Moves({s: [token] for s in n.next.keys()})
 
 
@@ -104,7 +104,7 @@ class SyncType(NodeType):
             node.color = '#fcfbe3'
         super().node_manipulator(node)
 
-    def sync(self, n: DiagramNode, token):
+    def execute(self, n: DiagramNode, token):
         bsync = BSync()
         if n.req != "[]":
             token['REQ'] = eval(n.req, globals(), token)
@@ -144,7 +144,7 @@ class LoopType(NodeType):
         node.label += "\ncount:" + node.count
         super().node_manipulator(node)
 
-    def sync(self, n: DiagramNode, token):
+    def execute(self, n: DiagramNode, token):
         try:
             token["COUNT"] = token["COUNT"] - 1
         except KeyError:
@@ -171,7 +171,7 @@ class IfType(NodeType):
         node.label += "\ncondition:" + node.cond
         super().node_manipulator(node)
 
-    def sync(self, n: DiagramNode, token):
+    def execute(self, n: DiagramNode, token):
         cond = eval(n.cond, globals(), token)
         if(cond):
             yield Moves({'then': [token]})
@@ -213,7 +213,7 @@ class WaitAll(NodeType):
         else:
             raise Exception("Illegal value for 'tokens_display': " + n.tokens_display)
 
-    def sync(self, n: DiagramNode, token):
+    def execute(self, n: DiagramNode, token):
         if n.waitall != "[]":
             if "WAITALL" not in token.keys():
                 tmp = eval(n.waitall, globals(), token)

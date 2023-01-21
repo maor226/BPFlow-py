@@ -67,7 +67,7 @@ Leaving= lambda i : 'Leaving('+str(i)+')'
 
         st2 -> wtApp2 -> reqLower2 -> wtLeav2 -> snRaise2 ->  blkEnter2;
         blkEnter2 -> reqLower2;
-        snRaise2 -- passthru ->  wtApp2 [label=Raise , color = red ,textcolor = red];
+        snRaise2 ->  wtApp2 [label=Raise , color = red ,textcolor = red];
 
         st2 [type="start", initial="[{}]" ];
 
@@ -81,5 +81,4 @@ Leaving= lambda i : 'Leaving('+str(i)+')'
 
         snRaise2 [type="sync", req="[Raise]",wait="[ES_Approaching]"];
 
-        passthru [type="sync", wait="[ES_Approaching]",hidden];
 }
