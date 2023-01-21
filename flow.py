@@ -131,7 +131,7 @@ def run(node_id: DiagramNode, token):
             node.tokens = node.tokens + [token]
             print_state(diagram)
 
-        x = node.node_type.sync(node, token)
+        x = node.node_type.execute(node, token)
         ret_val = None
         if isinstance(x, GeneratorType):
             ret_val = x.send(None)
