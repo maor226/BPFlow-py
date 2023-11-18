@@ -7,10 +7,15 @@ import sys
 import os
 import glob
 from bppy import *
+
+
+from BPFlowRunnerListener import BPFlowRunnerListener
 # from listener import Listener
 
 from NodeLibrary import *
 from SimplePriorityEventSelectionStrategy import SimplePriorityEventSelectionStrategy
+def deepcopy(x):
+    return copy.deepcopy(x)
 
 statecount = 0  # const
 builder.DiagramNode.type = "pass"
@@ -44,8 +49,9 @@ builder.DiagramNode.at = "res"
 builder.Diagram.run = None
 builder.Diagram.initialization_code = ""
 builder.Diagram.event_selection_mechanism = 'random'
+builder.Diagram.debug = False
 
-node_types = (StartType(), SyncType(), LoopType(), WaitAll(),IfType())
+node_types = (StartType(), SyncType(), LoopType(), WaitAll(), IfType())
 
 
 def traverse_nodes(n):
@@ -92,6 +98,7 @@ def build_predessessors_field(diagram):
 
 def print_diagram(diagram, file_name):
     draw = drawer.DiagramDraw('png', diagram, file_name + ".png")
+    # draw = drawer.DiagramDraw('pdf', diagram, file_name + ".pdf")
     draw.draw()
     draw.save()
 
@@ -110,8 +117,6 @@ def print_state(diagram, terminal_output=True):
 
     if terminal_output:
         print("--- State:", statecount, "---")
-        # for n in nodes:
-        #     print(n.id, "-->", "tokens:", n.tokens, "sync:", n.sync)
 
     for n in nodes:
         n.node_type.state_visualization(n)
@@ -129,7 +134,8 @@ def run(node_id: DiagramNode, token):
 
         if node.type != StartType().type_string():
             node.tokens = node.tokens + [token]
-            print_state(diagram)
+            if diagram.debug == 'True': # for debug mode
+                print_state(diagram,terminal_output=True)
 
         x = node.node_type.execute(node, token)
         ret_val = None
@@ -160,7 +166,7 @@ def run_diagram_bp(diagram):
     b_program = BProgram(bthreads=[run(n.id, t) for n in diagram.nodes for t in n.tokens],
                          event_selection_strategy=SimplePriorityEventSelectionStrategy() if diagram.event_selection_mechanism == 'priority'
                          else SimpleEventSelectionStrategy(),
-                         listener=PrintBProgramRunnerListener())
+                         listener=BPFlowRunnerListener(lambda :print_state(diagram,terminal_output = True),diagram.debug == "superstate"))
     b_program.run()
     print_state(diagram)
 
@@ -179,3 +185,7 @@ if __name__ == '__main__':
             run_diagram_bp(diagram)
         else:
             exec(diagram.run)
+
+
+
+

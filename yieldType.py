@@ -26,11 +26,11 @@ class BSync:
     def get_bsync(self):
         bsync = {}
         if self.block:
-            bsync[block] = deepcopy(self.block)
+            bsync[block] = copy.deepcopy(self.block)
         if self.wait:
-            bsync[waitFor] = deepcopy(self.wait)
+            bsync[waitFor] = copy.deepcopy(self.wait)
         if self.req:
-            bsync[request] = deepcopy(self.req)
+            bsync[request] = copy.deepcopy(self.req)
 
         return bsync
 

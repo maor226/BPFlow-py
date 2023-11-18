@@ -37,7 +37,7 @@ class NodeType(metaclass=abc.ABCMeta):
 
         if n.tokens_display == 'full':
             for t in n.tokens:
-                t=deepcopy(t)
+                t=copy.deepcopy(t)
                 if "event" in t:
                     del t["event"]
                 n.label += "\n" + str(t)
@@ -52,7 +52,7 @@ class NodeType(metaclass=abc.ABCMeta):
         yield Moves({s: [token] for s in n.next.keys()})  # move to all port
 
     def toBPEvent(self, events, n):
-        return [BEventPriority(event, priority=n.priority) if isinstance(event,str) else EventSet(event) for event in events]
+        return [BEventPriority(event, priority=n.priority) if isinstance(event,str) else BEventPriority(event.name,event.data,n.priority) if isinstance(event, BEvent)  else  EventSet(event) for event in events]
 
 
 ###################################################################################
@@ -64,11 +64,12 @@ class StartType(NodeType):
 
     def node_manipulator(self, node: DiagramNode) -> None:
         node.shape = "beginpoint"
-        node.label = ""
+        node.label = node.initial
 
         if node.initial is None:
             node.tokens = [{}]
         else:
+            # node.label = node.initial
             node.tokens = eval(node.initial)
 
         super().node_manipulator(node)
@@ -121,6 +122,7 @@ class SyncType(NodeType):
             bsync.add_block(*self.toBPEvent(token['BLOCK'], n))
 
         event = yield bsync
+        token["last_event"] = event.name
 
         for k in ['BLOCK', 'REQ', 'WAIT']:
             if k in token:
@@ -179,6 +181,28 @@ class IfType(NodeType):
             yield Moves({'else': [token]})
 
 
+#######################################################################################
+
+class UpdateType(NodeType):
+
+    def type_string(self) -> str:
+        return "update"
+
+    def node_manipulator(self, node: DiagramNode) -> None:
+        node.label = 'Update Token'
+        if not hasattr(node, 'var'):
+            raise Exception("Update node must have a 'var' attribute")
+        if not hasattr(node, 'value'):
+            raise Exception("Update node must have a 'value' attribute")
+        node.label += "\nvariable: " + node.var
+        node.label += "\nvalue: " + node.value
+        super().node_manipulator(node)
+
+    def execute(self, n: DiagramNode, token):
+        val = eval(n.value, globals(), token)
+        token[n.var] = val
+        yield Moves({'default': [token]})
+
 
 #######################################################################################
 
@@ -190,7 +214,7 @@ class WaitAll(NodeType):
     def node_manipulator(self, node: DiagramNode) -> None:
         node.label = "WAIT All  OF\n" + node.waitall
         # node.waitall =[] if node.waitall == '[]' else node.waitall.split(",")
-        node.width = 400
+        node.width = 200
         node.height = 80
         super().node_manipulator(node)
 
@@ -228,6 +252,7 @@ class WaitAll(NodeType):
             token['WAIT'] = list(set.union(*(set(l) for l in token["WAITALL"])))  # need to be the union
 
             event = yield BSync(wait=self.toBPEvent(token["WAIT"], n))
+            token["last_event"] = event.name
 
             assert event is not None, "we assume bppy always return something"
 
