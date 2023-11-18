@@ -41,19 +41,45 @@ Fork = [([1,4,2],[7,3]) ,([1,4,5],[7,6]),([1,7,9],[4,8]),([1,7,9],[4,8])]
 
 "
 
+  event_selection_mechanism = "priority"
+
+
+
+
+
+######################################################################################
+
     #must play in torns
 
     st7 -> sy7_1 -> sy7_2 -> sy7_1;
 
-    st7   [type=start, initial="[{}]"];
+    st7   [type=start, initial="[{}]", at="{}"];
     sy7_1 [type=sync, block="All(O)", wait="All(X)"]
     sy7_2 [type=sync, block="All(X)", wait="All(O)"]
 ######################################################################################
 
-    #ask for a move
-    st_t2 ->sync2 ;
+    #one player can chose each place + tie checker
 
-    st_t2 [type=start, initial="[{'cell':i} for i in range(1,10)]", width=400];
-    sync2 [type=sync, req="[O(cell),X(cell)]",priority =2]
+    st8 -> sy8_1 -> sy8_2 ;
+
+    st8   [type=start, initial="[{'i':i} for i in range(1,10)]",at ="{i:i} for i in Places", width=270];
+    sy8_1 [type=sync, wait="[X(i),O(i)]"]
+    sy8_2 [type=sync, block="[X(i),O(i)]"]
+
+
+    #make player O turns
+######################################################################################
+
+       #WinChecker
+
+    st5 -> wa5 -> rq5;
+
+    st5 [type=start, initial="[{'line':line} for line in Line ]", at = "Lines"];
+    wa5 [type=waitall, waitall="[X(i) for i in line]"]
+    rq5 [type=sync, req="[Xwin]",block= "AllMove()+[Tie]"]
+######################################################################################
+
+
+
 
 }

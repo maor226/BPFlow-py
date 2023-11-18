@@ -1,0 +1,119 @@
+blockdiag {
+
+initialization_code="""
+from bppy import BEvent
+
+global WALLS
+WALLS = [(1,3)]
+
+global start
+start = (2,5)
+
+global end
+end = (1,4)
+
+global pick_point
+pick_point = (1,1)
+
+global moveTo
+def moveTo(p):
+    return (e) -> (e.name == "move" and e["to"] == p)
+
+global move
+def move(p1,p2):
+    return BEvent("move" , {from : p1, to : p2})
+
+global Up
+def Up(p):
+    return move(p, (p[0], p[1]+1))
+
+global Down
+def Down(p):
+    return move(p, (p[0], p[1]-1))
+
+global Left
+def Left(p):
+    return move(p, (p[0]-1, p[1]))
+
+global Right
+def Right(p):
+    return move(p, (p[0]+1, p[1]))
+
+global pick
+pick = "pick up"
+
+global drop
+drop = "drop off"
+
+global ALLMOVES
+def ALLMOVES(e):
+    return e=="move"
+
+global All
+def All( e):
+    return True
+
+global win
+win = "end game"
+
+"""
+
+#########################################################################################
+# dont enter the wall
+
+    st1 -> bl1 ;
+
+    st1 [type=start, initial="[{'wall' : w} for w in WALLS]", width=400]
+    bl1 [type=sync, block="move(wall)"]
+
+#########################################################################################
+# go up down left or right pick up and drop off
+
+    st2 -> req2 ;
+
+    st2 [type=start, initial="[{'x' : start[0], 'y': start[1]}]", width=400]
+    req2 [type=sync, req="[Left((x,y)),Down((x,y)), Up((x,y)), Right((x,y)) ,pick, drop]"]
+
+
+#########################################################################################
+# can only pick up if at pick up point
+
+    st3 ->bl3 -> wait3 -> bl3;
+
+    st3 [type=start, initial="[{}]"]
+    bl3 [type=sync, block="pick", wait="moveTo(pick_point)"]
+    wait3 [type=sync, wait="ALLMOVES"]
+
+#########################################################################################
+# can only drop off if at end point
+
+    st4 -> bl4 -> wait4 -> bl4;
+
+    st4 [type=start, initial="[{}]"]
+    bl4 [type=sync, block="drop", wait="moveTo(end)"]
+    wait4 [type=sync, wait="ALLMOVES"]
+
+#########################################################################################
+# interlive pick drop
+
+    st5 -> pick5 -> drop5 -> pick5;
+
+    st5 [type=start, initial="[{}]"]
+    pick5 [type=sync, wait="pick", block="drop"]
+    drop5 [type=sync, wait="drop", block="pick"]
+
+#########################################################################################
+#win
+
+        st6 -> wait6 -> drop6 -> wait6;
+        drop6 -> win6 [label=drop];
+        win6 -> bl6;
+
+        st6 [type=start, initial="[{}]"]
+        wait6 [type=sync, wait="moveTo(end)"]
+        bl6 [type=sync, block="All"]
+        win6 [type=sync, req="win"]
+        drop6 [type=sync, wait="[ALLMOVES, drop]"]
+
+
+}

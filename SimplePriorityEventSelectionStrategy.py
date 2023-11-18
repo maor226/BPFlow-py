@@ -5,7 +5,7 @@ from bppy import SimpleEventSelectionStrategy
 
 
 class SimplePriorityEventSelectionStrategy(SimpleEventSelectionStrategy):
-    def select(self, statements):
+    def select(self, statements, external_events_queue, **kwargs):
         selectable_events = self.selectable_events(statements)
         if selectable_events:
             key = lambda bpEvent: bpEvent.priority if isinstance(bpEvent,

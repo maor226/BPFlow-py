@@ -25,13 +25,19 @@ global Approaching
 Approaching = lambda i : 'Approaching('+str(i)+')'
 
 global Raise
-Raise = lambda i : 'Raise('+str(i)+')'
+Raise =  'Raise'
+# Raise = lambda i : 'Raise('+str(i)+')'
 
 global Enter
 Enter = lambda i : 'Enter('+str(i)+')'
 
 global Leaving
 Leaving= lambda i : 'Leaving('+str(i)+')'
+
+global  Lower
+Lower= 'Lower'
+
+
 
 "
 
@@ -41,7 +47,7 @@ Leaving= lambda i : 'Leaving('+str(i)+')'
 
     st1 -> snApp1 -> snEnt1 -> snLeav1 -> snApp1;
 
-    st1 [type="start", initial="[{ 'i' : i} for i in range(N)]" ];
+    st1 [type="start", initial="[{ 'i' : i} for i in range(N)]", at = "{i:i} for i in [1,N]",width=270];
 
     snApp1 [type="sync", req="[Approaching(i)]"];
 
@@ -55,21 +61,22 @@ Leaving= lambda i : 'Leaving('+str(i)+')'
 
     st3 -> snLower2 -> snRaise3 ->snLower2;
 
-    st3 [type="start", initial="[{}]" ];
+    st3 [type="start", initial="[{}]" , at = "{}"];
 
-    snLower2 [type="sync", wait="[ES_Lower]",block="[ES_Enter]"];
+    snLower2 [type="sync", wait="[Lower]",block="[ES_Enter]"];
 
-    snRaise3 [type="sync", wait="[ES_Raise]"];
+    snRaise3 [type="sync", wait="[Raise]" ];
 
 ######################################################################################
 
 #    R2 *
 
-        st2 -> wtApp2 -> reqLower2 -> wtLeav2 -> snRaise2 ->  blkEnter2;
-        blkEnter2 -> reqLower2;
+        st2 -> wtApp2 -> reqLower2 -> wtLeav2 ;
+        wtLeav2 -> snRaise2 [folded];
+        snRaise2 -> blkEnter2 -> reqLower2;
         snRaise2 ->  wtApp2 [label=Raise , color = red ,textcolor = red];
 
-        st2 [type="start", initial="[{}]" ];
+        st2 [type="start", initial="[{}]" ,at = "{}"];
 
         wtApp2 [type="sync", wait="[ES_Approaching]"];
 
